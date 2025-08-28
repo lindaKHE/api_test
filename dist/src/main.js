@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const swagger_1 = require("@nestjs/swagger");
-const app_module_1 = require("./app.module");
+const app_module_1 = require("./modules/app.module");
 const common_1 = require("@nestjs/common");
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const bootstrap = async () => {
@@ -11,9 +11,16 @@ const bootstrap = async () => {
         .setTitle('API template')
         .setDescription('')
         .setVersion('1.0.0')
+        .addBasicAuth({
+        type: 'http',
+        scheme: 'basic',
+    }, 'basic-auth')
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, options);
     swagger_1.SwaggerModule.setup('/', app, document);
+    const config = new swagger_1.DocumentBuilder()
+        .addBasicAuth()
+        .build();
     app.useGlobalPipes(new common_1.ValidationPipe({
         transform: true,
         transformOptions: {

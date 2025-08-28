@@ -1,10 +1,14 @@
+
 export function transformUserDto(data: {
   name?: string;
   firstname?: string;
   gender?: string;
   birthdate?: string;
   username: string;
-  password: string;
+  password?: string;
+  parentId?: string;    
+
+  role?: string; 
 }) {
   return {
     ...(data.username && { username: data.username }),
@@ -14,5 +18,7 @@ export function transformUserDto(data: {
 
     ...(data.firstname !== undefined && { firstname: data.firstname }),
     ...(data.birthdate !== undefined && { birthdate: new Date(data.birthdate) }),
+    ...(data.parentId !== undefined && { parentId: data.parentId }),
+    ...(data.role !== undefined && { role: data.role }),
   };
 }

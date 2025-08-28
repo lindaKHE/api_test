@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module';
+import { AppModule } from './modules/app.module';
 import { ValidationPipe } from '@nestjs/common';
 
 const PORT: number = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -12,11 +12,23 @@ const bootstrap = async () => {
 		.setTitle('API template')
 		.setDescription('')
 		.setVersion('1.0.0')
+		.addBasicAuth(
+			{
+			  type: 'http',
+			  scheme: 'basic',
+			},
+			'basic-auth', // This is the name you'll reference in decorators
+		  )
 		.build();
 
 	const document = SwaggerModule.createDocument(app, options);
 	SwaggerModule.setup('/', app, document);
 
+	const config = new DocumentBuilder()
+  .addBasicAuth()
+  .build();
+
+  
 	app.useGlobalPipes(
 		new ValidationPipe({
 			transform: true,

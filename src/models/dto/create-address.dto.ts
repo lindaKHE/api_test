@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateAddressDto {
   @ApiProperty({ example: '10 rue des Lilas' })
@@ -22,8 +22,8 @@ export class CreateAddressDto {
   @IsNotEmpty()
   country: string;
 
-  @ApiProperty({ example: 'cl13n7ID' }) // met un exemple d'ID d'utilisateur
+  @IsOptional()
+  @ApiProperty({ example: 'cl13n7ID' }) 
   @IsString()
-  @IsNotEmpty()
-  userId: string;
+  userId?: string;
 }

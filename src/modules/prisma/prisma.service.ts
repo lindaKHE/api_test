@@ -18,6 +18,7 @@ export class PrismaService
 	extends PrismaClient
 	implements OnModuleInit, OnModuleDestroy
 {
+  userProfile: any;
 	constructor() {
 		super(prismaClientOptions);
 	}

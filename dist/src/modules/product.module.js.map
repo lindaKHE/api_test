@@ -1,0 +1,1 @@
+{"version":3,"file":"product.module.js","sourceRoot":"","sources":["../../../src/modules/product.module.ts"],"names":[],"mappings":";;;;;;;;;AACA,2CAAwC;AACxC,qCAA0C;AAE1C,0EAAuE;AACvE,gEAA6D;AAOpD,IAAM,aAAa,GAAnB,MAAM,aAAa;CAAG,CAAA;AAAhB,sCAAa;wBAAb,aAAa;IAJ3B,IAAA,eAAM,EAAC;QACJ,WAAW,EAAE,CAAC,sCAAiB,CAAC;QAChC,SAAS,EAAE,CAAC,gCAAc,EAAE,sBAAa,CAAC;KAC3C,CAAC;GACW,aAAa,CAAG"}

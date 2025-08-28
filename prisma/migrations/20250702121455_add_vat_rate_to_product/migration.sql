@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `product` MODIFY `vatRate` INTEGER NOT NULL DEFAULT 0;

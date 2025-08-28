@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `product` ADD COLUMN `vatRate` DOUBLE NOT NULL DEFAULT 0;

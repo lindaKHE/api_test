@@ -5,5 +5,6 @@ export class FilterUserQuery {
   @ApiPropertyOptional({ example: 'linda' })
   @IsOptional()
   @IsString()
-  nom ?: string;
+  name?: string;
+  profileCode?: string; 
 }

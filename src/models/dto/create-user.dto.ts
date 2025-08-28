@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsEnum, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { EGender } from 'src/interfaces/user.interface';
+import { EGender, ERole } from 'src/interfaces/user.interface';
 import { Transform } from 'class-transformer';
 
 
@@ -18,11 +18,16 @@ export class CreateUserDto {
   @IsString()
   username : string;
 
+  @IsOptional()
   @ApiProperty()
   @IsString()
-  password: string;
+  password? : string;
 
-
+  @IsOptional()
+  @ApiProperty({ example: ['ETUDIANT', 'PMR'] })
+  @IsString({ each: true })
+  profileCodes?: string[];
+  
 
 
   @ApiProperty({ example: 'khelifa' })
@@ -58,4 +63,10 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   country?: string;
+  
+  @IsOptional()
+  @IsEnum(ERole)
+  role?: ERole;
+
+  parentId?: string;
 }
