@@ -18,6 +18,7 @@ const order_service_1 = require("../service/order.service");
 const create_order_dto_1 = require("../models/dto/create-order.dto");
 const auth_guard_1 = require("../modules/auth/auth.guard");
 const currentUser_decorator_1 = require("../decorators/currentUser.decorator");
+const client_1 = require("@prisma/client");
 const admin_basic_auth_guard_1 = require("../modules/auth/admin-basic-auth.guard");
 const order_response_dto_1 = require("../models/dto/order-response.dto");
 const order_status_util_1 = require("../common/utils/order-status.util");
@@ -148,6 +149,37 @@ let OrderController = class OrderController {
             file,
         });
         return justification;
+    }
+    async getJustification(id) {
+        const justification = await this.orderService.getJustificationById(id);
+        if (!justification) {
+            throw new common_1.NotFoundException(`Justificatif ${id} introuvable`);
+        }
+        return justification;
+    }
+    async getAllJustifications(status) {
+        let enumStatus;
+        if (status) {
+            if (!Object.values(client_1.JustificationStatus).includes(status)) {
+                throw new common_1.BadRequestException(`Statut invalide : ${status}`);
+            }
+            enumStatus = status;
+        }
+        const justifications = await this.orderService.getAllJustifications(enumStatus);
+        if (!justifications || justifications.length === 0) {
+            throw new common_1.NotFoundException('Aucun justificatif trouvé');
+        }
+        return justifications;
+    }
+    async updateJustificationStatus(id, status) {
+        if (!Object.values(client_1.JustificationStatus).includes(status)) {
+            throw new common_1.BadRequestException(`Statut invalide : ${status}`);
+        }
+        const updated = await this.orderService.updateJustificationStatus(id, status);
+        if (!updated) {
+            throw new common_1.NotFoundException(`Justificatif ${id} introuvable`);
+        }
+        return updated;
     }
 };
 exports.OrderController = OrderController;
@@ -283,9 +315,9 @@ __decorate([
 __decorate([
     (0, common_1.Post)(':orderId/articles/:orderArticleId/justification'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', justifications_multer_config_1.justificationMulterOptions)),
-    (0, swagger_1.ApiOperation)({ summary: 'Uploader un justificatif pour une ligne de commande' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Uploader un justificatif pour une  de commande' }),
     (0, swagger_1.ApiParam)({ name: 'orderId', description: 'ID de la commande' }),
-    (0, swagger_1.ApiParam)({ name: 'orderArticleId', description: 'ID de la ligne de commande' }),
+    (0, swagger_1.ApiParam)({ name: 'orderArticleId', description: 'ID  de la  commande' }),
     (0, swagger_1.ApiBody)({
         schema: {
             type: 'object',
@@ -301,6 +333,62 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], OrderController.prototype, "uploadJustification", null);
+__decorate([
+    (0, common_1.Get)('justifications/:id'),
+    (0, common_1.UseGuards)(admin_basic_auth_guard_1.AdminBasicAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Récupérer un justificatif par son ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'ID du justificatif' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], OrderController.prototype, "getJustification", null);
+__decorate([
+    (0, common_1.Get)('justifications'),
+    (0, common_1.UseGuards)(admin_basic_auth_guard_1.AdminBasicAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Lister tous les justificatifs (optionnel : filtrer par statut)' }),
+    (0, swagger_1.ApiQuery)({ name: 'status', required: false, description: 'Filtrer par statut : A_VALIDER, VALIDE, REFUSE' }),
+    __param(0, (0, common_1.Query)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], OrderController.prototype, "getAllJustifications", null);
+__decorate([
+    (0, common_1.Patch)('justifications/:id/status'),
+    (0, common_1.UseGuards)(admin_basic_auth_guard_1.AdminBasicAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Modifier le statut d’un justificatif' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'ID du justificatif' }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                status: {
+                    type: 'string',
+                    enum: ['A_VALIDER', 'VALIDE', 'REFUSE']
+                },
+            },
+            required: ['status'],
+        },
+    }),
+    (0, common_1.Patch)('justifications/:id/status'),
+    (0, common_1.UseGuards)(admin_basic_auth_guard_1.AdminBasicAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Modifier le statut d’un justificatif' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'ID du justificatif' }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                status: { type: 'string', enum: ['A_VALIDER', 'VALIDE', 'REFUSE'] },
+            },
+            required: ['status'],
+        },
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:returntype", Promise)
+], OrderController.prototype, "updateJustificationStatus", null);
 exports.OrderController = OrderController = __decorate([
     (0, swagger_1.ApiBasicAuth)('basic-auth'),
     (0, swagger_1.ApiTags)('Orders'),

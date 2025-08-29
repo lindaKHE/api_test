@@ -23,6 +23,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_1 = require("../modules/prisma");
+const client_1 = require("@prisma/client");
 const order_status_util_1 = require("../common/utils/order-status.util");
 const justification_status_enum_1 = require("../enums/src/enums/justification-status.enum");
 let OrderService = class OrderService {
@@ -296,6 +297,52 @@ let OrderService = class OrderService {
             },
         });
         return justification;
+    }
+    async getJustificationById(id) {
+        return this.prisma.justificationDocument.findUnique({
+            where: { id },
+        });
+    }
+    async getAllJustifications(status) {
+        return this.prisma.justificationDocument.findMany({
+            where: status ? { status } : {},
+            include: { orderArticle: true },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    async updateJustificationStatus(id, status) {
+        const justification = await this.prisma.justificationDocument.findUnique({
+            where: { id },
+            include: {
+                orderArticle: {
+                    include: {
+                        order: { include: { user: true } },
+                        product: { include: { allowedProfiles: true } },
+                    },
+                },
+            },
+        });
+        if (!justification)
+            return null;
+        const updated = await this.prisma.justificationDocument.update({
+            where: { id },
+            data: { status },
+        });
+        if (status === client_1.JustificationStatus.VALIDE) {
+            const userId = justification.orderArticle.order.user.id;
+            const allowedProfiles = justification.orderArticle.product.allowedProfiles;
+            if (allowedProfiles.length > 0) {
+                await this.prisma.user.update({
+                    where: { id: userId },
+                    data: {
+                        profiles: {
+                            connect: allowedProfiles.map((p) => ({ id: p.id })),
+                        },
+                    },
+                });
+            }
+        }
+        return updated;
     }
 };
 exports.OrderService = OrderService;

@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Patch, Param, Delete, Res, BadRequestException, InternalServerErrorException, NotFoundException, GoneException, ForbiddenException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards, Patch, Param, Delete, Res, BadRequestException, InternalServerErrorException, NotFoundException, GoneException, ForbiddenException, UseInterceptors, UploadedFile, ParseIntPipe } from '@nestjs/common';
 import { OrderService } from 'src/service/order.service';
 import { CreateOrderDto } from 'src/models/dto/create-order.dto';
 import { BasicAuthGuard } from 'src/modules/auth/auth.guard';
 import { CurrentUser } from 'src/decorators/currentUser.decorator';
-import { Product, User } from '@prisma/client';
+import { JustificationStatus, Product, User } from '@prisma/client';
 import { AdminBasicAuthGuard } from 'src/modules/auth/admin-basic-auth.guard';
 import { OrderResponseDto } from 'src/models/dto/order-response.dto';
 import { Response } from 'express';
@@ -298,9 +298,9 @@ export class OrderController {
   }
   @Post(':orderId/articles/:orderArticleId/justification')
   @UseInterceptors(FileInterceptor('file', justificationMulterOptions))
-  @ApiOperation({ summary: 'Uploader un justificatif pour une ligne de commande' })
+  @ApiOperation({ summary: 'Uploader un justificatif pour une  de commande' })
   @ApiParam({ name: 'orderId', description: 'ID de la commande' })
-  @ApiParam({ name: 'orderArticleId', description: 'ID de la ligne de commande' })
+  @ApiParam({ name: 'orderArticleId', description: 'ID  de la  commande' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -309,6 +309,7 @@ export class OrderController {
       },
     },
   })
+  //verif de l'order id corresp a une commande 
   async uploadJustification(
     @Param('orderId') orderId: string,
     @Param('orderArticleId') orderArticleId: string,
@@ -318,7 +319,8 @@ export class OrderController {
       throw new NotFoundException('Fichier non fourni');
     }
 
-    // Appel du service pour créer l’enregistrement en base
+
+    // créer l’enregistrement en base
     const justification = await this.orderService.attachJustification({
       orderId,
       orderArticleId,
@@ -327,7 +329,101 @@ export class OrderController {
 
     return justification;
   }
+
+
+
+ @Get('justifications/:id')
+ @UseGuards(AdminBasicAuthGuard)
+
+@ApiOperation({ summary: 'Récupérer un justificatif par son ID' })
+@ApiParam({ name: 'id', description: 'ID du justificatif' })
+async getJustification(@Param('id', ParseIntPipe) id: number) {
+  const justification = await this.orderService.getJustificationById(id);
+
+  if (!justification) {
+    throw new NotFoundException(`Justificatif ${id} introuvable`);
+  }
+
+  return justification;
 }
+@Get('justifications')
+@UseGuards(AdminBasicAuthGuard)
+@ApiOperation({ summary: 'Lister tous les justificatifs (optionnel : filtrer par statut)' })
+@ApiQuery({ name: 'status', required: false, description: 'Filtrer par statut : A_VALIDER, VALIDE, REFUSE' })
+async getAllJustifications(@Query('status') status?: string) {
+
+
+  let enumStatus: JustificationStatus | undefined;
+  if (status) {
+    if (!Object.values(JustificationStatus).includes(status as JustificationStatus)) {
+      throw new BadRequestException(`Statut invalide : ${status}`);
+    }
+    enumStatus = status as JustificationStatus;
+  }
+
+  const justifications = await this.orderService.getAllJustifications(enumStatus);
+
+  if (!justifications || justifications.length === 0) {
+    throw new NotFoundException('Aucun justificatif trouvé');
+  }
+
+  return justifications;
+}
+
+
+@Patch('justifications/:id/status')
+@UseGuards(AdminBasicAuthGuard)
+@ApiOperation({ summary: 'Modifier le statut d’un justificatif' })
+@ApiParam({ name: 'id', description: 'ID du justificatif' })
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      status: { 
+        type: 'string', 
+        enum: ['A_VALIDER', 'VALIDE', 'REFUSE'] 
+      },
+    },
+    required: ['status'],
+  },
+})
+@Patch('justifications/:id/status')
+@UseGuards(AdminBasicAuthGuard)
+@ApiOperation({ summary: 'Modifier le statut d’un justificatif' })
+@ApiParam({ name: 'id', description: 'ID du justificatif' })
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      status: { type: 'string', enum: ['A_VALIDER', 'VALIDE', 'REFUSE'] },
+    },
+    required: ['status'],
+  },
+})
+async updateJustificationStatus(
+  @Param('id', ParseIntPipe) id: number,
+  @Body('status') status: string,
+) {
+  // Vérifier le statut
+  if (!Object.values(JustificationStatus).includes(status as JustificationStatus)) {
+    throw new BadRequestException(`Statut invalide : ${status}`);
+  }
+//changer le nom updatedjustification
+  const updated = await this.orderService.updateJustificationStatus(
+    id,
+    status as JustificationStatus,
+  );
+
+  if (!updated) {
+    throw new NotFoundException(`Justificatif ${id} introuvable`);
+  }
+
+  return updated;
+}
+
+
+}
+
 
 
 

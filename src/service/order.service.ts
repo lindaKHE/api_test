@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma';
 import { CreateOrderDto } from 'src/models/dto/create-order.dto';
-import { Order, User } from '@prisma/client';
+import { JustificationStatus, Order, User } from '@prisma/client';
 import { OrderStatus } from '@prisma/client';
 import { OrderResponseDto } from 'src/models/dto/order-response.dto';
 import { isValidOrderStatus } from 'src/common/utils/order-status.util';
@@ -367,7 +367,7 @@ export class OrderService {
         orderArticleId: orderArticleId,
         path: file.path,                  // chemin du fichier côté serveur
         originalName: file.originalname,  // nom original du fichier
-        mimeType: file.mimetype,          // pdf, png...
+        mimeType: file.mimetype,          // pdf, png...(autoriser que pdf,png )//
         size: file.size,                  // taille du fichier
         status: JustificationStatusTs.A_VALIDER, // statut par deafaut 
       },
@@ -375,6 +375,70 @@ export class OrderService {
 
     return justification;
   }
+
+
+  async getJustificationById(id: number) {
+    return this.prisma.justificationDocument.findUnique({
+      where: { id },
+    });
+  }
+
+ 
+async getAllJustifications(status?: JustificationStatus) {
+  return this.prisma.justificationDocument.findMany({
+    where: status ? { status } : {},
+    include: { orderArticle: true },
+    orderBy: { createdAt: 'desc' },
+  });
+  }
+  
+  
+  async updateJustificationStatus(
+    id: number,
+    status: JustificationStatus,
+  ) {
+    const justification = await this.prisma.justificationDocument.findUnique({
+      where: { id },
+      include: {
+        orderArticle: {
+          include: {
+            order: { include: { user: true } },
+            product: { include: { allowedProfiles: true } },
+          },
+        },
+      },
+    });
+  
+    if (!justification) return null;
+  
+    // Mettre à jour le statut du justificatif
+    const updated = await this.prisma.justificationDocument.update({
+      where: { id },
+      data: { status },
+    });
+  
+    // Si VALIDE, ajouter les profils autorisés du produit à l'utilisateur
+    if (status === JustificationStatus.VALIDE) {
+      const userId = justification.orderArticle.order.user.id;
+      const allowedProfiles = justification.orderArticle.product.allowedProfiles;
+  
+      if (allowedProfiles.length > 0) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            profiles: {
+              connect: allowedProfiles.map((p) => ({ id: p.id })),
+            },
+          },
+        });
+      }
+    }
+  
+    return updated;
+  }
+  
+  
+  
 }
   
 

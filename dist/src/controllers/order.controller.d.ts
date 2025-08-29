@@ -31,4 +31,45 @@ export declare class OrderController {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    getJustification(id: number): Promise<{
+        id: number;
+        orderArticleId: string;
+        path: string;
+        originalName: string;
+        mimeType: string;
+        size: number;
+        status: import(".prisma/client").$Enums.JustificationStatus;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    getAllJustifications(status?: string): Promise<({
+        orderArticle: {
+            id: string;
+            orderId: string;
+            productId: number;
+            quantity: number;
+            unitPrice: number;
+        };
+    } & {
+        id: number;
+        orderArticleId: string;
+        path: string;
+        originalName: string;
+        mimeType: string;
+        size: number;
+        status: import(".prisma/client").$Enums.JustificationStatus;
+        createdAt: Date;
+        updatedAt: Date;
+    })[]>;
+    updateJustificationStatus(id: number, status: string): Promise<{
+        id: number;
+        orderArticleId: string;
+        path: string;
+        originalName: string;
+        mimeType: string;
+        size: number;
+        status: import(".prisma/client").$Enums.JustificationStatus;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
 }
